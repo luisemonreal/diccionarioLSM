@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Diccionario LSM - Marketing (Demo móvil)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0b0b0b;
+      --accent:#2f9e4a; /* suave verde */
+      --card-shadow: 0 6px 18px rgba(11,11,11,0.06);
+      --radius: 1rem; /* 2xl-ish */
+      --gap: 14px;
+      --ui-size:16px;
+    }
+    /* High contrast variant */
+    .hc{ --bg:#000000; --text:#ffffff; --card-shadow: none; }
+
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
+    .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+    /* Top bar */
+    header.top{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(0,0,0,0.06);background:var(--bg);position:sticky;top:0;z-index:30}
+    .brand{font-weight:700;font-size:18px;color:var(--accent);}
+    .search{flex:1;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.03);padding:8px;border-radius:12px}
+    .search input{flex:1;border:0;background:transparent;outline:none;font-size:var(--ui-size);color:var(--text)}
+    .icon-btn{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;cursor:pointer}
+
+    /* Accessibility controls */
+    .access-row{display:flex;gap:8px;padding:10px 14px;align-items:center}
+    .acc-btn{padding:8px 10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;font-size:14px}
+
+    /* Content area */
+    main.content{padding:14px;flex:1;overflow:auto}
+    .section{margin-bottom:22px}
+    .section h2{font-size:18px;margin:8px 0;color:var(--accent)}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap)}
+
+    /* Card */
+    .card{background:var(--bg);border-radius:var(--radius);box-shadow:var(--card-shadow);padding:10px;display:flex;flex-direction:column;gap:8px;border:1px solid rgba(0,0,0,0.04)}
+    .card .meta{display:flex;align-items:center;gap:8px}
+    .thumb{width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:linear-gradient(90deg,rgba(0,0,0,0.04),rgba(0,0,0,0.02));display:flex;align-items:center;justify-content:center}
+    .term{font-weight:700;font-size:15px}
+    .tag{font-size:12px;opacity:0.8}
+    .card .controls{display:flex;justify-content:space-between;align-items:center}
+    .small-icon{width:20px;height:20px}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:60;padding:18px}
+    .modal.open{display:flex}
+    .modal .panel{width:100%;max-width:720px;background:var(--bg);border-radius:14px;padding:14px}
+    .modal .panel header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+
+    /* Bottom nav */
+    nav.bottom{position:sticky;bottom:0;display:flex;justify-content:space-around;align-items:center;padding:10px 6px;border-top:1px solid rgba(0,0,0,0.06);background:var(--bg)}
+    nav .nav-item{display:flex;flex-direction:column;align-items:center;font-size:12px;color:rgba(0,0,0,0.7);gap:4px;text-decoration:none}
+    nav .nav-item.active{color:var(--accent);font-weight:700}
+
+    /* Responsive / small screens */
+    @media (max-width:420px){ .grid{grid-template-columns:1fr} .brand{font-size:16px} }
+
+    /* Text size variants */
+    .text-sm{font-size:13px} .text-md{font-size:16px} .text-lg{font-size:18px}
+
+    /* Accessible focus */
+    [tabindex]:focus, button:focus, a:focus{outline:3px solid rgba(47,158,74,0.18);outline-offset:2px}
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Diccionario LSM - Marketing">
+    <header class="top">
+      <div class="brand">Diccionario LSM · Marketing</div>
+      <div class="search" role="search" aria-label="Buscar término">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <input id="search" type="search" placeholder="Buscar término (ej. SEO, Branding)" aria-label="Buscar" />
+      </div>
+    </header>
+
+    <div class="access-row" aria-hidden="false">
+      <button class="acc-btn" id="btnContrast" aria-pressed="false" title="Alternar alto contraste">Alto contraste</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="acc-btn" id="decreaseText" title="Disminuir tamaño de texto">A-</button>
+        <button class="acc-btn" id="resetText" title="Tamaño de texto normal">A</button>
+        <button class="acc-btn" id="increaseText" title="Aumentar tamaño de texto">A+</button>
+      </div>
+      <button class="acc-btn" id="slowPlayback" aria-pressed="false" title="Reproducción lenta (0.75x)">Reproducción lenta</button>
+    </div>
+
+    <main class="content text-md" id="mainContent">
+      <!-- Sections -->
+      <section class="section" data-cat="Fundamentos">
+        <h2>Fundamentos del marketing</h2>
+        <div class="grid" id="fundamentosGrid"></div>
+      </section>
+
+      <section class="section" data-cat="Digital">
+        <h2>Marketing digital</h2>
+        <div class="grid" id="digitalGrid"></div>
+      </section>
+
+      <section class="section" data-cat="Marca">
+        <h2>Marca y publicidad</h2>
+        <div class="grid" id="marcaGrid"></div>
+      </section>
+
+      <section class="section" data-cat="Analisis">
+        <h2>Análisis y estrategia</h2>
+        <div class="grid" id="analisisGrid"></div>
+      </section>
+
+    </main>
+
+    <nav class="bottom" role="navigation" aria-label="Navegación principal">
+      <a href="#" class="nav-item active" data-view="home" id="navHome"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V11.5z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>Inicio</a>
+      <a href="#" class="nav-item" data-view="categories" id="navCategories"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" stroke="currentColor" stroke-width="1.2"/></svg>Categorías</a>
+      <a href="#" class="nav-item" data-view="favs" id="navFavs"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M12 21s-6.716-4.2-9.112-7.112C-2.018 8.99 3.104 3 8.008 6.88 9.895 8.237 12 10.24 12 10.24s2.105-2.003 3.992-3.36C20.896 3 26.018 8.99 21.112 13.888 18.716 16.8 12 21 12 21z" stroke="currentColor" stroke-width="0.6"/></svg>Favoritos</a>
+      <a href="#" class="nav-item" data-view="settings" id="navSettings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.2"/><path d="M19.4 15a1 1 0 0 0 .2 1.1l.6.6a1 1 0 0 1 0 1.4l-1.4 1.4a1 1 0 0 1-1.4 0l-.6-.6a1 1 0 0 0-1.1-.2 7.5 7.5 0 0 1-2.1.6 7.5 7.5 0 0 1-2.1-.6 1 1 0 0 0-1.1.2l-.6.6a1 1 0 0 1-1.4 0L5.7 19.1a1 1 0 0 1 0-1.4l.6-.6a1 1 0 0 0 .2-1.1 7.5 7.5 0 0 1-.6-2.1c.1-.8.3-1.6.6-2.1a1 1 0 0 0-.2-1.1l-.6-.6a1 1 0 0 1 0-1.4L6.6 5.7a1 1 0 0 1 1.4 0l.6.6c.3.3.8.4 1.1.2.6-.3 1.3-.5 2.1-.6a7.5 7.5 0 0 1 2.1.6c.8.3 1.5.8 2.1 1.4.3.3.8.4 1.1.2l.6-.6a1 1 0 0 1 1.4 0l1.4 1.4a1 1 0 0 1 0 1.4l-.6.6a1 1 0 0 0-.2 1.1c.3.6.5 1.3.6 2.1.1.8 0 1.6-.2 2.4z" stroke="currentColor" stroke-width="0.7"/></svg>Ajustes</a>
+    </nav>
+
+    <!-- Modal for video preview (embedded LSM explanation) -->
+    <div class="modal" id="videoModal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="panel" role="document">
+        <header>
+          <div style="font-weight:700;color:var(--accent)" id="modalTitle">Término</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="icon-btn" id="modalFav" title="Marcar favorito" aria-pressed="false">☆</button>
+            <button class="icon-btn" id="modalClose" aria-label="Cerrar" title="Cerrar">✕</button>
+          </div>
+        </header>
+        <div>
+          <!-- Video element will be injected here -->
+          <div id="videoHolder"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ==== Demo dataset (10 términos de ejemplo). Replace videoSrc with real file paths. ==== */
+    const TERMS = [
+      {term:'Branding', cat:'Marca', icon:'🏷️', videoSrc:'/videos/branding.mp4', poster:'/posters/branding.jpg'},
+      {term:'SEO', cat:'Digital', icon:'🔍', videoSrc:'/videos/seo.mp4', poster:'/posters/seo.jpg'},
+      {term:'Público objetivo', cat:'Fundamentos', icon:'🎯', videoSrc:'/videos/audience.mp4', poster:'/posters/audience.jpg'},
+      {term:'KPI', cat:'Analisis', icon:'📊', videoSrc:'/videos/kpi.mp4', poster:'/posters/kpi.jpg'},
+      {term:'Segmentación', cat:'Fundamentos', icon:'🧩', videoSrc:'/videos/segmentacion.mp4', poster:'/posters/segmentacion.jpg'},
+      {term:'Engagement', cat:'Digital', icon:'💬', videoSrc:'/videos/engagement.mp4', poster:'/posters/engagement.jpg'},
+      {term:'Embudo de ventas', cat:'Analisis', icon:'🛒', videoSrc:'/videos/embudo.mp4', poster:'/posters/embudo.jpg'},
+      {term:'Call to Action', cat:'Marca', icon:'➡️', videoSrc:'/videos/cta.mp4', poster:'/posters/cta.jpg'},
+      {term:'Marketing de contenidos', cat:'Digital', icon:'✍️', videoSrc:'/videos/contenidos.mp4', poster:'/posters/contenidos.jpg'},
+      {term:'Conversión', cat:'Analisis', icon:'🔁', videoSrc:'/videos/conversion.mp4', poster:'/posters/conversion.jpg'}
+    ];
+
+    const grids = {
+      'Fundamentos': document.getElementById('fundamentosGrid'),
+      'Digital': document.getElementById('digitalGrid'),
+      'Marca': document.getElementById('marcaGrid'),
+      'Analisis': document.getElementById('analisisGrid')
+    };
+
+    function createCard(item){
+      const card = document.createElement('article');
+      card.className='card';
+      card.setAttribute('role','group');
+      card.setAttribute('aria-label',item.term);
+
+      const thumb = document.createElement('div'); thumb.className='thumb';
+      // show a small inline video (preview) but disabled controls to avoid navigation; no external links
+      const vid = document.createElement('video');
+      vid.setAttribute('preload','metadata'); vid.setAttribute('playsinline',''); vid.setAttribute('muted',''); vid.setAttribute('aria-hidden','true');
+      vid.src = item.videoSrc; vid.poster = item.poster; vid.style.width='100%'; vid.style.height='100%'; vid.style.objectFit='cover';
+      // don't autoplay to preserve data; provide a small overlay play icon
+      const playOverlay = document.createElement('div'); playOverlay.innerHTML = '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M5 3v18l15-9L5 3z" fill="rgba(255,255,255,0.9)"/></svg>';
+      playOverlay.style.position='absolute'; playOverlay.style.pointerEvents='none';
+      thumb.appendChild(vid);
+      thumb.appendChild(playOverlay);
+      thumb.style.position='relative';
+
+      const meta = document.createElement('div'); meta.className='meta';
+      const info = document.createElement('div');
+      info.innerHTML = `<div class="term">${item.term}</div><div class="tag">${item.icon} · ${item.cat}</div>`;
+
+      const controls = document.createElement('div'); controls.className='controls';
+      const openBtn = document.createElement('button'); openBtn.className='icon-btn'; openBtn.setAttribute('aria-label','Abrir video'); openBtn.innerHTML='▶';
+      openBtn.addEventListener('click',()=>openModal(item));
+
+      const favBtn = document.createElement('button'); favBtn.className='icon-btn'; favBtn.setAttribute('aria-label','Favorito'); favBtn.innerHTML = isFavorite(item.term)?'★':'☆';
+      favBtn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleFavorite(item.term); favBtn.innerHTML = isFavorite(item.term)?'★':'☆'; });
+
+      controls.appendChild(openBtn);
+      controls.appendChild(favBtn);
+
+      card.appendChild(thumb);
+      card.appendChild(info);
+      card.appendChild(controls);
+
+      // make whole card keyboard accessible
+      card.tabIndex=0;
+      card.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') openModal(item); });
+      card.addEventListener('click', ()=> openModal(item));
+
+      return card;
+    }
+
+    /* populate grids */
+    TERMS.forEach(it=>{
+      const el = createCard(it);
+      // choose grid by its category mapping
+      if(it.cat === 'Fundamentos') grids['Fundamentos'].appendChild(el);
+      if(it.cat === 'Digital') grids['Digital'].appendChild(el);
+      if(it.cat === 'Marca') grids['Marca'].appendChild(el);
+      if(it.cat === 'Analisis') grids['Analisis'].appendChild(el);
+    });
+
+    /* Search functionality */
+    const search = document.getElementById('search');
+    search.addEventListener('input', ()=>{
+      const q = search.value.trim().toLowerCase();
+      document.querySelectorAll('.card').forEach(card=>{
+        const label = card.getAttribute('aria-label').toLowerCase();
+        card.style.display = label.includes(q)?'flex':'none';
+      });
+    });
+
+    /* Modal behavior */
+    const modal = document.getElementById('videoModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const videoHolder = document.getElementById('videoHolder');
+    const modalClose = document.getElementById('modalClose');
+    const modalFav = document.getElementById('modalFav');
+    let currentTerm = null;
+
+    function openModal(item){
+      currentTerm = item.term;
+      modalTitle.textContent = item.term;
+      modalFav.innerText = isFavorite(item.term)?'★':'☆';
+      // inject video (single large player). No external links — videos assumed local/packaged.
+      videoHolder.innerHTML = '';
+      const v = document.createElement('video');
+      v.src = item.videoSrc; v.poster = item.poster; v.controls=true; v.setAttribute('playsinline',''); v.setAttribute('aria-label',item.term+' — video en Lengua de Señas Mexicana');
+      v.style.width='100%'; v.style.borderRadius='10px';
+      videoHolder.appendChild(v);
+      // apply slow playback if toggled
+      if(slowMode) v.playbackRate = 0.75; else v.playbackRate = 1;
+
+      modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+      // trap focus (basic)
+      modalClose.focus();
+    }
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+    function closeModal(){
+      // pause and remove video
+      videoHolder.querySelectorAll('video').forEach(v=>{ v.pause(); v.src=''; });
+      modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');
+      currentTerm = null;
+    }
+
+    // favorites in localStorage
+    function favorites(){ try{ return JSON.parse(localStorage.getItem('lsm_favs')||'[]'); }catch(e){return[]} }
+    function isFavorite(t){ return favorites().includes(t); }
+    function toggleFavorite(t){ const f=favorites(); const i=f.indexOf(t); if(i>-1) f.splice(i,1); else f.push(t); localStorage.setItem('lsm_favs',JSON.stringify(f)); }
+    modalFav.addEventListener('click', ()=>{ if(!currentTerm) return; toggleFavorite(currentTerm); modalFav.innerText = isFavorite(currentTerm)?'★':'☆'; });
+
+    /* Accessibility controls */
+    const btnContrast = document.getElementById('btnContrast');
+    btnContrast.addEventListener('click', ()=>{
+      document.documentElement.classList.toggle('hc');
+      const pressed = document.documentElement.classList.contains('hc');
+      btnContrast.setAttribute('aria-pressed', pressed);
+    });
+
+    let textSize = 16;
+    const mainContent = document.getElementById('mainContent');
+    document.getElementById('increaseText').addEventListener('click', ()=>{ textSize = Math.min(22,textSize+2); mainContent.style.fontSize = textSize+'px'; });
+    document.getElementById('decreaseText').addEventListener('click', ()=>{ textSize = Math.max(12,textSize-2); mainContent.style.fontSize = textSize+'px'; });
+    document.getElementById('resetText').addEventListener('click', ()=>{ textSize = 16; mainContent.style.fontSize = textSize+'px'; });
+
+    let slowMode = false;
+    const slowBtn = document.getElementById('slowPlayback');
+    slowBtn.addEventListener('click', ()=>{ slowMode = !slowMode; slowBtn.setAttribute('aria-pressed', slowMode); slowBtn.style.fontWeight = slowMode?700:400; // updates playback on open modal only
+      // set playback rate on any visible small preview videos
+      document.querySelectorAll('.thumb video').forEach(v=> v.playbackRate = slowMode?0.75:1);
+    });
+
+    /* Bottom navigation simple behavior */
+    document.querySelectorAll('nav.bottom .nav-item').forEach(a=>{
+      a.addEventListener('click',(e)=>{ e.preventDefault(); document.querySelectorAll('nav.bottom .nav-item').forEach(n=>n.classList.remove('active')); a.classList.add('active'); const view=a.dataset.view; handleView(view); });
+    });
+
+    function handleView(v){
+      if(v==='home'){ document.querySelectorAll('.section').forEach(s=>s.style.display='block'); }
+      else if(v==='categories'){ document.querySelectorAll('.section').forEach(s=>s.style.display='block'); window.scrollTo({top:0,behavior:'smooth'}); }
+      else if(v==='favs'){
+        document.querySelectorAll('.card').forEach(c=>{ c.style.display = isFavorite(c.getAttribute('aria-label')) ? 'flex' : 'none'; });
+      }
+      else if(v==='settings'){ document.querySelectorAll('.section').forEach(s=>s.style.display='none'); alert('Panel de ajustes (demo): aquí podrías ajustar idioma, importar videos, etc.'); }
+    }
+
+    // keyboard: Esc to close modal
+    document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeModal(); });
+
+    /* Note: videoSrc and poster values are placeholders. For a production app, bundle video files into app package and use accessible compressed formats and captions if needed. */
+  </script>
+</body>
+</html>
